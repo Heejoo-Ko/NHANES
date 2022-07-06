@@ -1,6 +1,5 @@
 library(data.table);library(magrittr);library(jstable);library(dplyr);library(MatchIt)
 options(survey.lonely.psu = "adjust")
-#setwd("~/ShinyApps/SMC_SAIHST/danbee/NHANES")
 
 alist <- aws.s3::s3readRDS("data/SAIHST/danbee/NHANES_AYA_US_KOR.rds", bucket = "zarathu")
 
@@ -222,6 +221,20 @@ nh1$RHQ131 <- with(nh1, ifelse(RHQ131 == 1, 1,
 knh$LW_pr <- with(knh, ifelse(LW_pr == 1, 1,
                               ifelse(LW_pr ==2, 0, NA)))
 
+#times have been pregnant
+# #US
+# nh1$RHQ160 <- with(nh1, ifelse(RHQ160 == 0, 0,
+#                                ifelse(RHQ160 ==1, 1,
+#                                       ifelse(RHQ160 >=2 & RHQ160 <=4, 2,
+#                                              ifelse(RHQ160>=5 & RHQ160<=10, 3, 
+#                                                     ifelse(RHQ160==1, 4, 0))))))
+# #KOR
+# knh$LW_pr_1 <- with(knh, ifelse(LW_pr_1 == 0, 0,
+#                                 ifelse(LW_pr_1 ==1, 1,
+#                                        ifelse(LW_pr_1 >=2 & LW_pr_1 <=4, 2,
+#                                               ifelse(LW_pr_1 >=5 & LW_pr_1 <=10, 3,
+#                                                      ifelse(LW_pr_1 >=11, 4, 0))))))
+
 ## Age at last menstrual period, mean(SD)
 nh1[, r_last := ifelse(RHQ060 %in% c(777, 999), NA, RHQ060)]
 knh %<>% mutate(r_last = ifelse(LW_mp_a %in% c(888, 999), NA, LW_mp_a))
@@ -334,13 +347,15 @@ nh1$p_id <- nh1$p_id %>% as.character()
 nh1$racecat <- nh1$racecat %>% as.character()
 knh$racecat <- knh$racecat %>% as.character()
 
+nh1$ast_d
 
 ## Combine 2 data
 varlist <- list(Base = c("cancer", "AYA", "p_age", "country", "racecat", "p_sex", "BMI", "p_edu", "p_marri", "job_stat", "job_type",  "house_inc",
                          "job_hr", "g_health", "n_fam", "alc", "smk"),
                 Disease = c("art_d", "ast_d", "hbp_d", "chol_d", "diab_d", "stk_d", "ang_d", "mi_d", "thy_d"),
                 Physical = c("pf_lim", "phy_v", "phy_vn", "phy_m", "phy_mn"), 
-                Reproduce = c("r_pregn", "r_preg", "r_last"),
+                # Reproduce = c("r_pregn", "r_preg", "r_last"),
+                Reproduce = c("r_preg", "r_last"),
                 CancerType = c("stomach_c", "liver_c", "colon_c", "breast_c", "cervix_c", "lung_c", "thy_c", "other_c"),
                 Survey = c("p_id", "strata", "persweight"),
                 CancerAge = c("stomach_a","liver_a","colon_a","breast_a","cervix_a","lung_a","thy_a","other_a"))
@@ -401,17 +416,18 @@ tot <- dplyr::bind_rows(nh1, knh)[
 
 tot<-tot[!(AYA==0 & cancer==1),.SD,.SD]
 
-tot <- tot[, `:=`(r_pregn = ifelse(r_pregn %in% c(88, 99), NA, r_pregn),
-                  job_hr = ifelse(job_hr %in% c(888, 99999), NA, job_hr),
+tot <- tot[, `:=`(job_hr = ifelse(job_hr %in% c(888, 99999), NA, job_hr),
                   g_health = ifelse(g_health ==9, NA, g_health),
                   pf_lim = ifelse(pf_lim ==9, NA, pf_lim))][]
-for (v in c("p_edu", "p_marri", "job_stat", "job_type", "r_preg", "house_inc", varlist$Disease, "phy_vn", "phy_mn", "alc", "smk")){
+
+for (v in c("p_edu", "p_marri", "job_stat", "job_type", "house_inc", varlist$Disease, "phy_vn", "phy_mn", "alc", "smk")){
   if(!is.null(tot[[v]][tot[[v]] == 8])){
     tot[[v]][tot[[v]] == 8] <- NA
   }
 }
 
-for (v in unlist(varlist[c("Disease", "CancerType")])){
+natozero <- c(unlist(varlist[c("Disease", "CancerType")]),"r_preg")
+for (v in natozero){
   if(!is.null(tot[[v]][is.na(tot[[v]]) | tot[[v]] == 8])){
     tot[[v]][is.na(tot[[v]]) | tot[[v]] == 8] <- 0
   }
@@ -419,14 +435,13 @@ for (v in unlist(varlist[c("Disease", "CancerType")])){
 
 tot<-na.omit(tot, cols = c("p_edu","p_marri","house_inc","job_stat","ast_d","hbp_d","chol_d","diab_d","stk_d","ang_d","mi_d","thy_d"))
 
-
 set.seed(1)
 test <- matchit(AYA ~ p_age + p_sex + racecat, data = tot,
                 method = "nearest", distance = "glm", ratio = 5)
 
 out <- match.data(test)[, .SD, .SDcols = -c("distance", "weights", "subclass")]
 
-factor_vars <- c("cancer", "AYA", "country", "racecat", "p_sex", "p_edu", "p_marri", "job_stat", "job_type", "r_pregn", "r_preg", "house_inc", "g_health",
+factor_vars <- c("cancer", "AYA", "country", "racecat", "p_sex", "p_edu", "p_marri", "job_stat", "job_type", "r_preg", "house_inc", "g_health",
                  varlist$Disease, varlist$Physical, varlist$CancerType,"BMI")
 
 out[, (factor_vars) := lapply(.SD, factor), .SDcols = factor_vars]
