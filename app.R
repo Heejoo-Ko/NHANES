@@ -329,7 +329,27 @@ server <- function(input, output, session) {
   })
   
   
-  out_tb1 <- callModule(tb1module2, "tb1", data = data, data_label = data.label, data_varStruct = vlist, nfactor.limit = nfactor.limit, design.survey = design.survey)
+  data.info2<-reactive({
+    omitcols<-unlist(varlist[c("CancerType","CancerAge","Time")])
+    out1 <- out[, .SD,.SDcols=-omitcols]
+    out.label1 <- out.label[!variable %in% omitcols,.SD]
+    
+    return(list(data = out1, label = out.label1))
+  })
+  
+  data2 <- reactive({
+    data.info2()$data
+  })
+  
+  data.label2 <- reactive(data.info2()$label)
+  
+  design.survey2 <- reactive(svydesign(data = data2(), id =~p_id, strata = ~strata, weights = ~persweight, nest = T))
+  
+  vlist2 <- reactive({
+    varlist[c("Base","Disease","Physical","Reproduce","Survey")]
+  })
+  
+  out_tb1 <- callModule(tb1module2, "tb1", data = data2, data_label = data.label2, data_varStruct = vlist2, nfactor.limit = nfactor.limit, design.survey = design.survey2)
   
   output$table1 <- renderDT({
     tb = out_tb1()$table
