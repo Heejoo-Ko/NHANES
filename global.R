@@ -6,7 +6,7 @@ setwd("/home/heejooko/ShinyApps/saihst-nhanes")
 out <- readRDS("NHANES_AYA_final.RDS")
 
 out[, n_fam := as.integer((n_fam >= 2) + (n_fam >= 4) + ( n_fam>= 6))]
-out[, r_pregn := ifelse(is.na(r_preg == 0), 0, r_pregn)][, r_pregn := as.integer((r_pregn >=1) + (r_pregn >=2) + (r_pregn >=5) + (r_pregn >=11))]
+# out[, r_pregn := ifelse(is.na(r_preg == 0), 0, r_pregn)][, r_pregn := as.integer((r_pregn >=1) + (r_pregn >=2) + (r_pregn >=5) + (r_pregn >=11))]
 out[, job_type := ifelse(job_stat == "2", "0", as.character(job_type))]
 
 
@@ -14,7 +14,7 @@ varlist <- list(Base = c("cancer", "AYA", "p_age", "country", "racecat", "p_sex"
                          "job_hr", "g_health", "n_fam", "alc", "smk"),
                 Disease = c("art_d", "ast_d", "hbp_d", "chol_d", "diab_d", "stk_d", "ang_d", "mi_d", "thy_d"),
                 Physical = c("pf_lim", "phy_v", "phy_vn", "phy_m", "phy_mn"), 
-                Reproduce = c("r_pregn", "r_preg", "r_last"),
+                Reproduce = c("r_preg", "r_last"),
                 CancerType = c("stomach_c", "liver_c", "colon_c", "breast_c", "cervix_c", "lung_c", "thy_c", "other_c"),
                 Survey = c("p_id", "strata", "persweight"),
                 CancerAge = c("stomach_a","liver_a","colon_a","breast_a","cervix_a","lung_a","thy_a","other_a","cancer_a"),
@@ -31,7 +31,7 @@ for(v in varlist$CancerAge){
 #  out[[v]] <- ifelse(is.na(out[[v]]), "0", as.character(out[[v]]))
 #}
 
-factor_vars <- c("cancer", "AYA", "country", "racecat", "p_sex", "p_edu", "p_marri", "job_stat", "job_type", "r_pregn", "r_preg", "house_inc", "g_health", "n_fam",
+factor_vars <- c("cancer", "AYA", "country", "racecat", "p_sex", "p_edu", "p_marri", "job_stat", "job_type", "r_preg", "house_inc", "g_health", "n_fam",
                  varlist$Disease, varlist$Physical, varlist$CancerType, "alc", "smk","BMI")
 factor_vars <- factor_vars[factor_vars %in% names(out)]
 conti_vars <- c("p_age", "job_hr","stomach_a","liver_a","colon_a","breast_a","cervix_a","lung_a","thy_a")
@@ -78,7 +78,7 @@ out.label[variable == "phy_mn", `:=`(var_label = "Moderate physical activity(day
 out.label[variable == "n_fam", `:=`(var_label = "Number of people in the household", val_label = c("1", "2-3", "4-5", "6 more"))]
 out.label[variable == "house_inc", `:=`(var_label = "Income", val_label = c("Less than $20,000", "$20,000 to $54,999", "$55,000 to $74,999", "More than $75,000"))]
 out.label[variable == "r_preg", `:=`(var_label = "Pregnant", val_label = c("No", "Yes"))]
-out.label[variable == "r_pregn", `:=`(var_label = "Number of pregnancies", val_label = c("0", "1", "2-4", "5-10", "11 more"))]
+# out.label[variable == "r_pregn", `:=`(var_label = "Number of pregnancies", val_label = c("0", "1", "2-4", "5-10", "11 more"))]
 out.label[variable == "job_stat", `:=`(var_label = "Job status", val_label = c("Unemployed", "Employed"))]
 out.label[variable == "job_type", `:=`(var_label = "Job type", val_label = c("Unemployed", "Wage worker", "Self-employed", "Family business without pay"))]
 out.label[variable == "job_hr", `:=`(var_label = "Working hours(/week)")]
