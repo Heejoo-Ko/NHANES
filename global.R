@@ -14,7 +14,7 @@ varlist <- list(Base = c("cancer", "AYA", "p_age", "country", "racecat", "p_sex"
                          "job_hr", "g_health", "n_fam", "alc", "smk"),
                 Disease = c("art_d", "ast_d", "hbp_d", "chol_d", "diab_d", "stk_d", "ang_d", "mi_d", "thy_d"),
                 Physical = c("pf_lim", "phy_v", "phy_vn", "phy_m", "phy_mn"), 
-                Reproduce = c("r_preg", "r_last"),
+                Reproduce = c("r_pregn","r_preg", "r_last"),
                 CancerType = c("stomach_c", "liver_c", "colon_c", "breast_c", "cervix_c", "lung_c", "thy_c", "other_c"),
                 Survey = c("p_id", "strata", "persweight"),
                 CancerAge = c("stomach_a","liver_a","colon_a","breast_a","cervix_a","lung_a","thy_a","other_a","cancer_a"),
