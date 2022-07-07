@@ -158,6 +158,7 @@ server <- function(input, output, session) {
       #validate(
       #  need(length(factor_subset) > 0 , "No factor variable for subsetting")
       #)
+      #
       
       tagList(
         selectInput("var_subset", "Subset variables",
@@ -281,7 +282,7 @@ server <- function(input, output, session) {
     #  w <- which(ref[["name.new"]] == vn)
     #  out.label1[variable == vn, var_label := ref[["name.old"]][w]]
     #}
-    #
+    
     
     return(list(data = out1, label = out.label1))
   })
