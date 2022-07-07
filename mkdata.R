@@ -221,19 +221,19 @@ nh1$RHQ131 <- with(nh1, ifelse(RHQ131 == 1, 1,
 knh$LW_pr <- with(knh, ifelse(LW_pr == 1, 1,
                               ifelse(LW_pr ==2, 0, NA)))
 
-#times have been pregnant
-# #US
-# nh1$RHQ160 <- with(nh1, ifelse(RHQ160 == 0, 0,
-#                                ifelse(RHQ160 ==1, 1,
-#                                       ifelse(RHQ160 >=2 & RHQ160 <=4, 2,
-#                                              ifelse(RHQ160>=5 & RHQ160<=10, 3, 
-#                                                     ifelse(RHQ160==1, 4, 0))))))
-# #KOR
-# knh$LW_pr_1 <- with(knh, ifelse(LW_pr_1 == 0, 0,
-#                                 ifelse(LW_pr_1 ==1, 1,
-#                                        ifelse(LW_pr_1 >=2 & LW_pr_1 <=4, 2,
-#                                               ifelse(LW_pr_1 >=5 & LW_pr_1 <=10, 3,
-#                                                      ifelse(LW_pr_1 >=11, 4, 0))))))
+# times have been pregnant
+#US
+nh1$RHQ160 <- with(nh1, ifelse(RHQ160 == 0, "0",
+                               ifelse(RHQ160 ==1, "1",
+                                      ifelse(RHQ160 >=2 & RHQ160 <=4, "2~4",
+                                             ifelse(RHQ160>=5 & RHQ160<=10, "5~10",
+                                                    ifelse(RHQ160==1, "11 or more", 0))))))
+#KOR
+knh$LW_pr_1 <- with(knh, ifelse(LW_pr_1 == 0, "0",
+                                ifelse(LW_pr_1 ==1, "1",
+                                       ifelse(LW_pr_1 >=2 & LW_pr_1 <=4, "2~4",
+                                              ifelse(LW_pr_1 >=5 & LW_pr_1 <=10, "5~10",
+                                                     ifelse(LW_pr_1 >=11, "11 or more", 0))))))
 
 ## Age at last menstrual period, mean(SD)
 nh1[, r_last := ifelse(RHQ060 %in% c(777, 999), NA, RHQ060)]
@@ -354,8 +354,7 @@ varlist <- list(Base = c("cancer", "AYA", "p_age", "country", "racecat", "p_sex"
                          "job_hr", "g_health", "n_fam", "alc", "smk"),
                 Disease = c("art_d", "ast_d", "hbp_d", "chol_d", "diab_d", "stk_d", "ang_d", "mi_d", "thy_d"),
                 Physical = c("pf_lim", "phy_v", "phy_vn", "phy_m", "phy_mn"), 
-                # Reproduce = c("r_pregn", "r_preg", "r_last"),
-                Reproduce = c("r_preg", "r_last"),
+                Reproduce = c("r_pregn","r_preg", "r_last"),
                 CancerType = c("stomach_c", "liver_c", "colon_c", "breast_c", "cervix_c", "lung_c", "thy_c", "other_c"),
                 Survey = c("p_id", "strata", "persweight"),
                 CancerAge = c("stomach_a","liver_a","colon_a","breast_a","cervix_a","lung_a","thy_a","other_a"))
@@ -426,7 +425,7 @@ for (v in c("p_edu", "p_marri", "job_stat", "job_type", "house_inc", varlist$Dis
   }
 }
 
-natozero <- c(unlist(varlist[c("Disease", "CancerType")]),"r_preg")
+natozero <- c(unlist(varlist[c("Disease", "CancerType")]),"r_preg","r_pregn")
 for (v in natozero){
   if(!is.null(tot[[v]][is.na(tot[[v]]) | tot[[v]] == 8])){
     tot[[v]][is.na(tot[[v]]) | tot[[v]] == 8] <- 0
@@ -441,7 +440,7 @@ test <- matchit(AYA ~ p_age + p_sex + racecat, data = tot,
 
 out <- match.data(test)[, .SD, .SDcols = -c("distance", "weights", "subclass")]
 
-factor_vars <- c("cancer", "AYA", "country", "racecat", "p_sex", "p_edu", "p_marri", "job_stat", "job_type", "r_preg", "house_inc", "g_health",
+factor_vars <- c("cancer", "AYA", "country", "racecat", "p_sex", "p_edu", "p_marri", "job_stat", "job_type", "r_preg", "r_pregn","house_inc", "g_health",
                  varlist$Disease, varlist$Physical, varlist$CancerType,"BMI")
 
 out[, (factor_vars) := lapply(.SD, factor), .SDcols = factor_vars]
@@ -449,3 +448,5 @@ out[, (factor_vars) := lapply(.SD, factor), .SDcols = factor_vars]
 out.label <- mk.lev(out)
 
 saveRDS(out, "NHANES_AYA_final.RDS")
+
+
