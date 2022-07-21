@@ -1,5 +1,6 @@
 library(data.table);library(magrittr);library(jstable);library(dplyr);library(MatchIt)
 options(survey.lonely.psu = "adjust")
+# setwd("/home/heejooko/ShinyApps/saihst-nhanes")
 
 alist <- aws.s3::s3readRDS("data/SAIHST/danbee/NHANES_AYA_US_KOR.rds", bucket = "zarathu")
 
@@ -317,11 +318,11 @@ knh %<>%
 
 nh1[, `:=`(stomach_c = as.integer(MCQ230A == 35 | MCQ230B == 35 | MCQ230C == 35), 
            liver_c = as.integer(MCQ230A == 22 | MCQ230B == 22 | MCQ230C == 22),
-           colon_c = as.integer(MCQ230A == 16 | MCQ230B == 22 | MCQ230C == 22),
-           breast_c = as.integer(MCQ230A == 14 | MCQ230B == 22 | MCQ230C == 22),
-           cervix_c = as.integer(MCQ230A == 15 | MCQ230B == 22 | MCQ230C == 22),
-           lung_c = as.integer(MCQ230A == 23 | MCQ230B == 22 | MCQ230C == 22),
-           thy_c = as.integer(MCQ230A == 37 | MCQ230B == 22 | MCQ230C == 22),
+           colon_c = as.integer(MCQ230A == 16 | MCQ230B == 16 | MCQ230C == 16),
+           breast_c = as.integer(MCQ230A == 14 | MCQ230B == 14 | MCQ230C == 14),
+           cervix_c = as.integer(MCQ230A == 15 | MCQ230B == 15 | MCQ230C == 15),
+           lung_c = as.integer(MCQ230A == 23 | MCQ230B == 23 | MCQ230C == 23),
+           thy_c = as.integer(MCQ230A == 37 | MCQ230B == 37 | MCQ230C == 37),
            other_c = as.integer(MCQ230A %in% c(10:13, 17:21, 24:34, 36, 38, 39) | MCQ230B  %in% c(10:13, 17:21, 24:34, 36, 38, 39) | MCQ230C  %in% c(10:13, 17:21, 24:34, 36, 38, 39)))]
 
 nh1[, `:=`(stomach_a = ifelse(MCQ240Z %in% c(77777,99999),NA,MCQ240Z),
@@ -343,11 +344,11 @@ knh <- rename(knh, art_d = DM1_dg, ast_d = DJ4_dg, r_preg = LW_pr, racecat = rac
               p_edu = edu, p_marri = marri, job_stat = EC1_1, job_type = EC_stt_1, job_hr = EC_wht_23, g_health = D_1_1, r_pregn = LW_pr_1,
               hbp_d = DI1_dg, chol_d = DI2_dg, diab_d = DE1_dg, stk_d = DI3_dg, ang_d = DI6_dg, mi_d = DI5_dg, thy_d = DE2_dg, phy_v = BE3_75,
               pf_lim = LQ4_00, persweight = persweight, strata = kstrata, phy_vn = BE3_76, phy_m = BE3_85, phy_mn = BE3_86, n_fam = cfam, BMI = HE_BMI)
+
 nh1$p_id <- nh1$p_id %>% as.character()
 nh1$racecat <- nh1$racecat %>% as.character()
 knh$racecat <- knh$racecat %>% as.character()
 
-nh1$ast_d
 
 ## Combine 2 data
 varlist <- list(Base = c("cancer", "AYA", "p_age", "country", "racecat", "p_sex", "BMI", "p_edu", "p_marri", "job_stat", "job_type",  "house_inc",
@@ -419,13 +420,13 @@ tot <- tot[, `:=`(job_hr = ifelse(job_hr %in% c(888, 99999), NA, job_hr),
                   g_health = ifelse(g_health ==9, NA, g_health),
                   pf_lim = ifelse(pf_lim ==9, NA, pf_lim))][]
 
-for (v in c("p_edu", "p_marri", "job_stat", "job_type", "house_inc", varlist$Disease, "phy_vn", "phy_mn", "alc", "smk")){
+for (v in unlist(varlist$Disease)){
   if(!is.null(tot[[v]][tot[[v]] == 8])){
     tot[[v]][tot[[v]] == 8] <- NA
   }
 }
 
-natozero <- c(unlist(varlist[c("Disease", "CancerType")]),"r_preg","r_pregn")
+natozero <- unlist(varlist[c("Disease", "CancerType")])
 for (v in natozero){
   if(!is.null(tot[[v]][is.na(tot[[v]]) | tot[[v]] == 8])){
     tot[[v]][is.na(tot[[v]]) | tot[[v]] == 8] <- 0
